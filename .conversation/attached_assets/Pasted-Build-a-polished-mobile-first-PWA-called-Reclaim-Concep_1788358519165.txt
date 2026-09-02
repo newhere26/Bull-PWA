@@ -1,0 +1,119 @@
+Build a polished mobile-first PWA called Reclaim.
+
+Concept
+
+Reclaim helps people replace mindless scrolling with meaningful activities.
+
+The core loop is:
+
+I have X minutes → choose my mood → get 3 things I could do → start one → complete it → see my reclaimed time accumulate.
+
+The app should feel calm, premium, modern and encouraging — not like a productivity app or screen-time blocker.
+
+V1 screens
+
+1. Onboarding
+
+* Explain the core idea: even 30 min/day = ~15 hours/month.
+* Ask approximate daily scrolling time.
+* Ask interests: Reading, Learning, Fitness, Creativity, Music, Outdoors, Mindfulness, Cooking, Puzzles, Social, Building, Curiosity.
+* Ask when they usually scroll.
+* Keep onboarding short.
+
+2. Home
+Show prominently:
+
+* Time reclaimed today
+* Time reclaimed this month
+* Time reclaimed this year
+* Large CTA: “I have some time”
+
+Also include “Add reclaimed time” for manually logging time spent doing something instead of scrolling.
+
+3. Time selection
+5 / 10 / 20 / 30 / 45 / 60+ minutes + custom.
+
+4. Mood
+Low energy / Relax / Curious / Energetic / Creative / Social / Surprise me.
+
+5. Recommendations
+Show exactly 3 activity suggestions based on:
+
+* available time
+* mood
+* interests
+* previous activity history
+
+Each activity needs a title, short description and estimated duration.
+
+Include “Give me different options.”
+
+6. Activity
+Simple timer + activity instructions + Finish button.
+
+When completed:
+
+You reclaimed 18 minutes.
+
+Update the user’s total automatically.
+
+7. History
+Show completed activities and reclaimed time by day/category.
+
+8. Weekly summary
+Show total reclaimed time, categories and most-used activities. Give simple rule-based insights when enough data exists.
+
+Activity database
+
+Seed at least 150 genuinely varied activities, ranging from 5 minutes to 60+ minutes.
+
+Include productive AND purely enjoyable activities. Don’t make everything about self-improvement.
+
+Each activity should have:
+
+* duration
+* category
+* mood
+* energy level
+* interests
+* indoor/outdoor
+* equipment requirements
+
+Create a simple recommendation algorithm rather than AI for V1.
+
+Design
+
+Mobile-first, approximately 375–430px wide.
+
+Use:
+
+* clean typography
+* generous whitespace
+* attractive cards
+* subtle animations
+* large touch targets
+* light/dark mode
+
+Avoid:
+
+* excessive gamification
+* streaks
+* leaderboards
+* social feeds
+* infinite scrolling
+* guilt/shame messaging
+* generic productivity-dashboard aesthetics
+
+The app itself should not become another thing to scroll through.
+
+Important
+
+Do NOT build app blocking, social features, subscriptions, AI recommendations, wearable integration or browser extensions in V1.
+
+Prioritize a complete, polished core experience over lots of features.
+
+The most important metric is:
+
+Minutes of intentional activity Reclaim helps users create.
+
+Build the app so the entire experience works end-to-end with real data persistence, not mock buttons or static screens.

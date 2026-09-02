@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Reclaim"
+description = "A calm mobile-first app that helps people turn spare minutes into meaningful activities, track reclaimed time, and continue with a paid plan after a full-featured free trial."
+version = "1.0.0"
+id = "artifacts/reclaim"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20971
+
+[services.development]
+run = "pnpm --filter @workspace/reclaim run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/reclaim", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/reclaim/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20971"
+BASE_PATH = "/"
