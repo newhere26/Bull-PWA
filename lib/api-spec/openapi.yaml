@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: account
+    description: Account and onboarding operations
+  - name: reclaim
+    description: Reclaimed time and activity operations
+  - name: billing
+    description: Trial and subscription operations
 paths:
   /healthz:
     get:
@@ -24,6 +30,228 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /me:
+    get:
+      operationId: getMe
+      tags: [account]
+      summary: Get the signed-in account
+      responses:
+        "200":
+          description: Account details and access state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "401":
+          description: Authentication required
+    patch:
+      operationId: updateMe
+      tags: [account]
+      summary: Save onboarding preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeUpdate"
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "401":
+          description: Authentication required
+  /summary:
+    get:
+      operationId: getSummary
+      tags: [reclaim]
+      summary: Get reclaimed time totals
+      responses:
+        "200":
+          description: Time totals for the signed-in account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Summary"
+        "401":
+          description: Authentication required
+  /recommendations:
+    get:
+      operationId: getRecommendations
+      tags: [reclaim]
+      summary: Get three activity recommendations
+      parameters:
+        - name: minutes
+          in: query
+          required: true
+          schema:
+            type: number
+            minimum: 5
+            maximum: 180
+        - name: mood
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: refresh
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+      responses:
+        "200":
+          description: Exactly three matching activities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendations"
+        "401":
+          description: Authentication required
+  /completions:
+    post:
+      operationId: createCompletion
+      tags: [reclaim]
+      summary: Record a completed activity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompletionInput"
+      responses:
+        "201":
+          description: Completed activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Completion"
+        "401":
+          description: Authentication required
+  /manual-entries:
+    post:
+      operationId: createManualEntry
+      tags: [reclaim]
+      summary: Manually add reclaimed time
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManualEntryInput"
+      responses:
+        "201":
+          description: Manually logged reclaimed time
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Completion"
+        "401":
+          description: Authentication required
+  /history:
+    get:
+      operationId: getHistory
+      tags: [reclaim]
+      summary: Get recent completed activities
+      responses:
+        "200":
+          description: Recent history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/History"
+        "401":
+          description: Authentication required
+  /weekly-summary:
+    get:
+      operationId: getWeeklySummary
+      tags: [reclaim]
+      summary: Get a weekly reclaimed-time summary
+      responses:
+        "200":
+          description: Weekly summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklySummary"
+        "401":
+          description: Authentication required
+  /billing/status:
+    get:
+      operationId: getBillingStatus
+      tags: [billing]
+      summary: Get trial and subscription status
+      responses:
+        "200":
+          description: Billing access state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingStatus"
+        "401":
+          description: Authentication required
+  /billing/products:
+    get:
+      operationId: getBillingProducts
+      tags: [billing]
+      summary: Get active Reclaim plans
+      responses:
+        "200":
+          description: Available plans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingProducts"
+  /billing/checkout:
+    post:
+      operationId: createBillingCheckout
+      tags: [billing]
+      summary: Create a subscription checkout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "200":
+          description: Checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Checkout"
+        "401":
+          description: Authentication required
+  /billing/portal:
+    post:
+      operationId: createBillingPortal
+      tags: [billing]
+      summary: Create a customer billing portal session
+      responses:
+        "200":
+          description: Billing portal URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portal"
+        "401":
+          description: Authentication required
+  /billing/restore:
+    post:
+      operationId: restoreBilling
+      tags: [billing]
+      summary: Restore an existing subscription
+      responses:
+        "200":
+          description: Refreshed billing status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingStatus"
+        "401":
+          description: Authentication required
 components:
   schemas:
     HealthStatus:
@@ -33,4 +261,184 @@ components:
           type: string
       required:
         - status
+    Me:
+      type: object
+      required: [id, email, firstName, onboardingComplete, interests, scrollWindow, dailyScrollMinutes, access]
+      properties:
+        id: { type: string }
+        email: { type: string }
+        firstName: { type: ["string", "null"] }
+        onboardingComplete: { type: boolean }
+        interests:
+          type: array
+          items: { type: string }
+        scrollWindow: { type: ["string", "null"] }
+        dailyScrollMinutes: { type: ["number", "null"] }
+        access:
+          $ref: "#/components/schemas/BillingStatus"
+    MeUpdate:
+      type: object
+      properties:
+        firstName: { type: string }
+        interests:
+          type: array
+          items: { type: string }
+        scrollWindow: { type: string }
+        dailyScrollMinutes: { type: number, minimum: 0 }
+        onboardingComplete: { type: boolean }
+    BillingStatus:
+      type: object
+      required: [state, trialDaysRemaining, trialEndsAt, subscriptionStatus, currentPeriodEnd, plan]
+      properties:
+        state:
+          type: string
+          enum: [trial, active, past_due, canceled, expired]
+        trialDaysRemaining: { type: number, minimum: 0 }
+        trialEndsAt: { type: ["string", "null"], format: date-time }
+        subscriptionStatus: { type: ["string", "null"] }
+        currentPeriodEnd: { type: ["string", "null"], format: date-time }
+        plan: { type: ["string", "null"] }
+    Summary:
+      type: object
+      required: [todayMinutes, monthMinutes, yearMinutes, sessions, categories]
+      properties:
+        todayMinutes: { type: number }
+        monthMinutes: { type: number }
+        yearMinutes: { type: number }
+        sessions: { type: number }
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryTotal"
+    CategoryTotal:
+      type: object
+      required: [category, minutes]
+      properties:
+        category: { type: string }
+        minutes: { type: number }
+    Activity:
+      type: object
+      required: [id, title, description, durationMinutes, category, moods, energy, interests, setting, equipment, instructions]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        durationMinutes: { type: number }
+        category: { type: string }
+        moods:
+          type: array
+          items: { type: string }
+        energy: { type: string }
+        interests:
+          type: array
+          items: { type: string }
+        setting: { type: string }
+        equipment: { type: string }
+        instructions:
+          type: array
+          items: { type: string }
+    Recommendations:
+      type: object
+      required: [activities]
+      properties:
+        activities:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            $ref: "#/components/schemas/Activity"
+    CompletionInput:
+      type: object
+      required: [activityId, durationMinutes]
+      properties:
+        activityId: { type: string }
+        durationMinutes: { type: number, minimum: 1, maximum: 180 }
+    ManualEntryInput:
+      type: object
+      required: [title, durationMinutes, category]
+      properties:
+        title: { type: string, minLength: 1 }
+        durationMinutes: { type: number, minimum: 1, maximum: 600 }
+        category: { type: string }
+    Completion:
+      type: object
+      required: [id, title, durationMinutes, category, completedAt, source]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        durationMinutes: { type: number }
+        category: { type: string }
+        completedAt: { type: string, format: date-time }
+        source:
+          type: string
+          enum: [activity, manual]
+    History:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/Completion"
+    WeeklySummary:
+      type: object
+      required: [totalMinutes, dailyMinutes, categories, topActivities, insight]
+      properties:
+        totalMinutes: { type: number }
+        dailyMinutes:
+          type: array
+          items:
+            type: object
+            required: [day, minutes]
+            properties:
+              day: { type: string }
+              minutes: { type: number }
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryTotal"
+        topActivities:
+          type: array
+          items:
+            type: object
+            required: [title, count]
+            properties:
+              title: { type: string }
+              count: { type: number }
+        insight: { type: ["string", "null"] }
+    BillingProduct:
+      type: object
+      required: [id, name, description, monthlyPriceId, yearlyPriceId, monthlyAmount, yearlyAmount, currency]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        monthlyPriceId: { type: ["string", "null"] }
+        yearlyPriceId: { type: ["string", "null"] }
+        monthlyAmount: { type: ["number", "null"] }
+        yearlyAmount: { type: ["number", "null"] }
+        currency: { type: string }
+    BillingProducts:
+      type: object
+      required: [products]
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillingProduct"
+    CheckoutInput:
+      type: object
+      required: [priceId]
+      properties:
+        priceId: { type: string }
+    Checkout:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+    Portal:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
 
