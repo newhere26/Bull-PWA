@@ -1,5 +1,4 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq } from "drizzle-orm";
 import {
   CreateCompletionBody,
   CreateManualEntryBody,
@@ -15,7 +14,6 @@ import { activityCatalog, findActivity } from "../activityCatalog";
 import {
   completionsBetween,
   ensureUser,
-  getBillingStatus,
   hasReclaimAccess,
   recentCompletions,
 } from "../userStore";

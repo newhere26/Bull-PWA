@@ -10,7 +10,16 @@ import {
 } from "@workspace/api-zod";
 import { db, reclaimUsersTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest } from "../auth";
-import { getUncachableStripeClient } from "../stripeClient";
+import {
+  createCheckoutSession,
+  createCustomer,
+  createPortalSession,
+  listCustomers,
+  listReclaimProducts,
+  listSubscriptions,
+  retrievePrice,
+  retrieveProduct,
+} from "../stripeRest";
 import { ensureUser, getBillingStatus } from "../userStore";
 
 const router: IRouter = Router();
@@ -24,30 +33,7 @@ function originFor(req: AuthenticatedRequest) {
 }
 
 router.get("/billing/products", async (_req, res): Promise<void> => {
-  const stripe = await getUncachableStripeClient();
-  const [products, prices] = await Promise.all([
-    stripe.products.list({ active: true, limit: 100 }),
-    stripe.prices.list({ active: true, limit: 100, type: "recurring" }),
-  ]);
-  const plans = products.data
-    .filter((product) => product.metadata.reclaim === "true")
-    .map((product) => {
-      const productPrices = prices.data.filter(
-        (price) => typeof price.product === "string" && price.product === product.id,
-      );
-      const monthly = productPrices.find((price) => price.recurring?.interval === "month");
-      const yearly = productPrices.find((price) => price.recurring?.interval === "year");
-      return {
-        id: product.id,
-        name: product.name,
-        description: product.description ?? "A gentler way to make room for what matters.",
-        monthlyPriceId: monthly?.id ?? null,
-        yearlyPriceId: yearly?.id ?? null,
-        monthlyAmount: monthly?.unit_amount ?? null,
-        yearlyAmount: yearly?.unit_amount ?? null,
-        currency: monthly?.currency ?? yearly?.currency ?? "usd",
-      };
-    });
+  const plans = await listReclaimProducts();
   res.json(GetBillingProductsResponse.parse({ products: plans }));
 });
 
@@ -67,23 +53,19 @@ router.post("/billing/checkout", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const stripe = await getUncachableStripeClient();
-  const price = await stripe.prices.retrieve(parsed.data.priceId);
+  const price = await retrievePrice(parsed.data.priceId);
   if (!price.active || price.type !== "recurring" || typeof price.product !== "string") {
     res.status(400).json({ error: "That Reclaim plan is not available" });
     return;
   }
-  const product = await stripe.products.retrieve(price.product);
-  if (product.metadata.reclaim !== "true") {
+  const product = await retrieveProduct(price.product);
+  if (product.metadata?.reclaim !== "true") {
     res.status(400).json({ error: "That Reclaim plan is not available" });
     return;
   }
   let customerId = user.stripeCustomerId;
   if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      metadata: { reclaimUserId: user.id },
-    });
+    const customer = await createCustomer(user.email, user.id);
     customerId = customer.id;
     await db
       .update(reclaimUsersTable)
@@ -91,14 +73,12 @@ router.post("/billing/checkout", async (req, res): Promise<void> => {
       .where(eq(reclaimUsersTable.id, user.id));
   }
   const origin = originFor(auth);
-  const session = await stripe.checkout.sessions.create({
+  const session = await createCheckoutSession({
     customer: customerId,
-    mode: "subscription",
-    line_items: [{ price: price.id, quantity: 1 }],
-    success_url: `${origin}/app?checkout=success`,
-    cancel_url: `${origin}/pricing`,
-    metadata: { reclaimUserId: user.id },
-    subscription_data: { metadata: { reclaimUserId: user.id } },
+    price: price.id,
+    successUrl: `${origin}/app?checkout=success`,
+    cancelUrl: `${origin}/pricing`,
+    reclaimUserId: user.id,
   });
   if (!session.url) {
     res.status(502).json({ error: "Stripe did not return a checkout URL" });
@@ -114,45 +94,39 @@ router.post("/billing/portal", async (req, res): Promise<void> => {
     res.status(400).json({ error: "No billing account exists yet" });
     return;
   }
-  const stripe = await getUncachableStripeClient();
-  const session = await stripe.billingPortal.sessions.create({
-    customer: user.stripeCustomerId,
-    return_url: `${originFor(auth)}/settings`,
-  });
+  const session = await createPortalSession(
+    user.stripeCustomerId,
+    `${originFor(auth)}/settings`,
+  );
   res.json(CreateBillingPortalResponse.parse({ url: session.url }));
 });
 
 router.post("/billing/restore", async (req, res): Promise<void> => {
   const auth = req as AuthenticatedRequest;
   const user = await ensureUser(auth.userId, auth.userEmail);
-  const stripe = await getUncachableStripeClient();
   let customerId = user.stripeCustomerId;
   if (!customerId) {
-    const customers = await stripe.customers.list({ email: user.email, limit: 10 });
+    const customers = await listCustomers(user.email);
     customerId = customers.data[0]?.id;
   }
   if (!customerId) {
     res.json(RestoreBillingResponse.parse(getBillingStatus(user)));
     return;
   }
-  const subscriptions = await stripe.subscriptions.list({
-    customer: customerId,
-    status: "all",
-    limit: 20,
-  });
+  const subscriptions = await listSubscriptions(customerId);
   const subscription = subscriptions.data
     .filter((item) => item.status !== "incomplete" && item.status !== "incomplete_expired")
     .sort((a, b) => b.created - a.created)[0];
-  const item = subscription?.items.data[0];
-  const interval = item?.price.recurring?.interval;
+  const item = subscription?.items?.data?.[0];
+  const interval = item?.price?.recurring?.interval;
   const [updated] = await db
     .update(reclaimUsersTable)
     .set({
       stripeCustomerId: customerId,
       stripeSubscriptionId: subscription?.id ?? null,
       subscriptionStatus: subscription?.status ?? null,
-      currentPeriodEnd: subscription?.current_period_end
-        ? new Date(subscription.current_period_end * 1000)
+      currentPeriodEnd: item?.current_period_end
+        ? new Date(item.current_period_end * 1000)
         : null,
       plan: interval === "year" ? "yearly" : interval === "month" ? "monthly" : null,
       updatedAt: new Date(),

@@ -20,7 +20,7 @@ if (Number.isNaN(port) || port <= 0) {
 async function initStripe(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("DATABASE_URL is required");
-  await runMigrations({ databaseUrl, schema: "stripe" });
+  await runMigrations({ databaseUrl });
   const stripeSync = await getStripeSync();
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
   if (domain) {
@@ -29,7 +29,11 @@ async function initStripe(): Promise<void> {
   await stripeSync.syncBackfill();
 }
 
-await initStripe();
+try {
+  await initStripe();
+} catch (error) {
+  logger.warn({ err: error }, "Stripe sync initialization skipped; connector API remains available");
+}
 
 app.listen(port, (err) => {
   if (err) {

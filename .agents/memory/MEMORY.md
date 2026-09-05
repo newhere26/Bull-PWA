@@ -1,0 +1,1 @@
+- [Stripe connector access](stripe-connector.md) — use the attached connector proxy when the secret-based Stripe SDK path has no secret.

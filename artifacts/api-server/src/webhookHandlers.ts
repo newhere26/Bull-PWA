@@ -31,7 +31,9 @@ export class WebhookHandlers {
             stripeCustomerId: customerId,
             stripeSubscriptionId: object.id,
             subscriptionStatus: object.status,
-            currentPeriodEnd: new Date(object.current_period_end * 1000),
+            currentPeriodEnd: item?.current_period_end
+              ? new Date(item.current_period_end * 1000)
+              : null,
             plan: interval === "year" ? "yearly" : interval === "month" ? "monthly" : null,
           })
           .where(eq(reclaimUsersTable.stripeCustomerId, customerId));

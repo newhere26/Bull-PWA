@@ -7,8 +7,8 @@ import reclaimRouter from "./reclaim";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(billingRouter);
 router.use(accountRouter);
 router.use(reclaimRouter);
-router.use(billingRouter);
 
 export default router;
