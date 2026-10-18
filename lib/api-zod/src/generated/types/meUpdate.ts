@@ -12,5 +12,21 @@ export interface MeUpdate {
   scrollWindow?: string;
   /** @minimum 0 */
   dailyScrollMinutes?: number;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  dailyGoalMinutes?: number | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  weeklyGoalMinutes?: number | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  yearlyGoalMinutes?: number | null;
+  avatarId?: string;
   onboardingComplete?: boolean;
 }

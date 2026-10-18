@@ -12,11 +12,18 @@ export interface Me {
   email: string;
   /** @nullable */
   firstName: string | null;
+  avatarId: string;
   onboardingComplete: boolean;
   interests: string[];
   /** @nullable */
   scrollWindow: string | null;
   /** @nullable */
   dailyScrollMinutes: number | null;
+  /** @nullable */
+  dailyGoalMinutes: number | null;
+  /** @nullable */
+  weeklyGoalMinutes: number | null;
+  /** @nullable */
+  yearlyGoalMinutes: number | null;
   access: BillingStatus;
 }

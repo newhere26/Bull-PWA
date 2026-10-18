@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActivityList,
   BillingProducts,
   BillingStatus,
   Checkout,
@@ -440,6 +441,83 @@ export function useGetRecommendations<TData = Awaited<ReturnType<typeof getRecom
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetRecommendationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListActivitiesUrl = () => {
+
+
+
+
+  return `/api/activities`
+}
+
+/**
+ * @summary List all activity seeds for browsing
+ */
+export const listActivities = async ( options?: Parameters<typeof customFetch>[1]): Promise<ActivityList> => {
+
+  return customFetch<ActivityList>(getListActivitiesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListActivitiesQueryKey = () => {
+    return [
+    `/api/activities`
+    ] as const;
+    }
+
+
+export const getListActivitiesQueryOptions = <TData = Awaited<ReturnType<typeof listActivities>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListActivitiesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listActivities>>> = ({ signal }) => listActivities({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListActivitiesQueryResult = NonNullable<Awaited<ReturnType<typeof listActivities>>>
+export type ListActivitiesQueryError = ErrorType<void>
+
+
+/**
+ * @summary List all activity seeds for browsing
+ */
+
+export function useListActivities<TData = Awaited<ReturnType<typeof listActivities>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListActivitiesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

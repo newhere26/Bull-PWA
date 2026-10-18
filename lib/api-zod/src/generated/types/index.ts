@@ -7,6 +7,10 @@
  */
 
 export * from './activity';
+export * from './activityConditions';
+export * from './activityConditionsTimeOfDay';
+export * from './activityList';
+export * from './activityRequiresMaterials';
 export * from './billingProduct';
 export * from './billingProducts';
 export * from './billingStatus';

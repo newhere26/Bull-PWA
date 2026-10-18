@@ -39,12 +39,19 @@ export interface Me {
   email: string;
   /** @nullable */
   firstName: string | null;
+  avatarId: string;
   onboardingComplete: boolean;
   interests: string[];
   /** @nullable */
   scrollWindow: string | null;
   /** @nullable */
   dailyScrollMinutes: number | null;
+  /** @nullable */
+  dailyGoalMinutes: number | null;
+  /** @nullable */
+  weeklyGoalMinutes: number | null;
+  /** @nullable */
+  yearlyGoalMinutes: number | null;
   access: BillingStatus;
 }
 
@@ -54,6 +61,22 @@ export interface MeUpdate {
   scrollWindow?: string;
   /** @minimum 0 */
   dailyScrollMinutes?: number;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  dailyGoalMinutes?: number | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  weeklyGoalMinutes?: number | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  yearlyGoalMinutes?: number | null;
+  avatarId?: string;
   onboardingComplete?: boolean;
 }
 
@@ -70,11 +93,40 @@ export interface Summary {
   categories: CategoryTotal[];
 }
 
+export type ActivityRequiresMaterials = typeof ActivityRequiresMaterials[keyof typeof ActivityRequiresMaterials];
+
+
+export const ActivityRequiresMaterials = {
+  none: 'none',
+  basic: 'basic',
+  specific: 'specific',
+} as const;
+
+export type ActivityConditionsTimeOfDay = typeof ActivityConditionsTimeOfDay[keyof typeof ActivityConditionsTimeOfDay];
+
+
+export const ActivityConditionsTimeOfDay = {
+  day: 'day',
+  night: 'night',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ActivityConditions = {
+  timeOfDay?: ActivityConditionsTimeOfDay;
+} | null;
+
 export interface Activity {
   id: string;
   title: string;
   description: string;
-  durationMinutes: number;
+  minMinutes: number;
+  maxMinutes: number;
+  requiresOther: boolean;
+  requiresMaterials: ActivityRequiresMaterials;
+  /** @nullable */
+  conditions?: ActivityConditions;
   category: string;
   moods: string[];
   energy: string;
@@ -92,11 +144,15 @@ export interface Recommendations {
   activities: Activity[];
 }
 
+export interface ActivityList {
+  activities: Activity[];
+}
+
 export interface CompletionInput {
   activityId: string;
   /**
      * @minimum 1
-     * @maximum 180
+     * @maximum 240
      */
   durationMinutes: number;
 }
@@ -141,6 +197,7 @@ export type WeeklySummaryDailyMinutesItem = {
 export type WeeklySummaryTopActivitiesItem = {
   title: string;
   count: number;
+  minutes: number;
 };
 
 export interface WeeklySummary {
@@ -185,14 +242,20 @@ export interface Portal {
 
 export type GetRecommendationsParams = {
 /**
- * @minimum 5
- * @maximum 180
+ * @minimum 1
+ * @maximum 240
  */
-minutes: number;
+minutes?: number;
 mood: string;
 /**
  * @minimum 0
  */
 refresh?: number;
+/**
+ * Device-local hour (0-23) for time-of-day context matching
+ * @minimum 0
+ * @maximum 23
+ */
+hour?: number;
 };
 

@@ -5,12 +5,19 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ActivityConditions } from './activityConditions';
+import type { ActivityRequiresMaterials } from './activityRequiresMaterials';
 
 export interface Activity {
   id: string;
   title: string;
   description: string;
-  durationMinutes: number;
+  minMinutes: number;
+  maxMinutes: number;
+  requiresOther: boolean;
+  requiresMaterials: ActivityRequiresMaterials;
+  /** @nullable */
+  conditions?: ActivityConditions;
   category: string;
   moods: string[];
   energy: string;

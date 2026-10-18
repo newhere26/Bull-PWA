@@ -10,7 +10,7 @@ export interface CompletionInput {
   activityId: string;
   /**
      * @minimum 1
-     * @maximum 180
+     * @maximum 240
      */
   durationMinutes: number;
 }

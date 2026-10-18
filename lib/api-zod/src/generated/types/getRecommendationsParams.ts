@@ -8,13 +8,19 @@
 
 export type GetRecommendationsParams = {
 /**
- * @minimum 5
- * @maximum 180
+ * @minimum 1
+ * @maximum 240
  */
-minutes: number;
+minutes?: number;
 mood: string;
 /**
  * @minimum 0
  */
 refresh?: number;
+/**
+ * Device-local hour (0-23) for time-of-day context matching
+ * @minimum 0
+ * @maximum 23
+ */
+hour?: number;
 };

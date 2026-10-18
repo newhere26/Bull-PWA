@@ -85,11 +85,11 @@ paths:
       parameters:
         - name: minutes
           in: query
-          required: true
+          required: false
           schema:
             type: number
-            minimum: 5
-            maximum: 180
+            minimum: 1
+            maximum: 240
         - name: mood
           in: query
           required: true
@@ -101,6 +101,14 @@ paths:
           schema:
             type: number
             minimum: 0
+        - name: hour
+          in: query
+          required: false
+          description: Device-local hour (0-23) for time-of-day context matching
+          schema:
+            type: number
+            minimum: 0
+            maximum: 23
       responses:
         "200":
           description: Exactly three matching activities
@@ -108,6 +116,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Recommendations"
+        "401":
+          description: Authentication required
+  /activities:
+    get:
+      operationId: listActivities
+      tags: [reclaim]
+      summary: List all activity seeds for browsing
+      responses:
+        "200":
+          description: Full activity catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityList"
         "401":
           description: Authentication required
   /completions:
@@ -263,17 +285,21 @@ components:
         - status
     Me:
       type: object
-      required: [id, email, firstName, onboardingComplete, interests, scrollWindow, dailyScrollMinutes, access]
+      required: [id, email, firstName, onboardingComplete, interests, scrollWindow, dailyScrollMinutes, dailyGoalMinutes, weeklyGoalMinutes, yearlyGoalMinutes, avatarId, access]
       properties:
         id: { type: string }
         email: { type: string }
         firstName: { type: ["string", "null"] }
+        avatarId: { type: string }
         onboardingComplete: { type: boolean }
         interests:
           type: array
           items: { type: string }
         scrollWindow: { type: ["string", "null"] }
         dailyScrollMinutes: { type: ["number", "null"] }
+        dailyGoalMinutes: { type: ["number", "null"] }
+        weeklyGoalMinutes: { type: ["number", "null"] }
+        yearlyGoalMinutes: { type: ["number", "null"] }
         access:
           $ref: "#/components/schemas/BillingStatus"
     MeUpdate:
@@ -285,6 +311,10 @@ components:
           items: { type: string }
         scrollWindow: { type: string }
         dailyScrollMinutes: { type: number, minimum: 0 }
+        dailyGoalMinutes: { type: ["number", "null"], minimum: 1 }
+        weeklyGoalMinutes: { type: ["number", "null"], minimum: 1 }
+        yearlyGoalMinutes: { type: ["number", "null"], minimum: 1 }
+        avatarId: { type: string }
         onboardingComplete: { type: boolean }
     BillingStatus:
       type: object
@@ -318,12 +348,19 @@ components:
         minutes: { type: number }
     Activity:
       type: object
-      required: [id, title, description, durationMinutes, category, moods, energy, interests, setting, equipment, instructions]
+      required: [id, title, description, category, moods, energy, interests, setting, equipment, instructions, minMinutes, maxMinutes, requiresOther, requiresMaterials]
       properties:
         id: { type: string }
         title: { type: string }
         description: { type: string }
-        durationMinutes: { type: number }
+        minMinutes: { type: number }
+        maxMinutes: { type: number }
+        requiresOther: { type: boolean }
+        requiresMaterials: { type: string, enum: [none, basic, specific] }
+        conditions:
+          type: [object, "null"]
+          properties:
+            timeOfDay: { type: string, enum: [day, night] }
         category: { type: string }
         moods:
           type: array
@@ -347,12 +384,20 @@ components:
           maxItems: 3
           items:
             $ref: "#/components/schemas/Activity"
+    ActivityList:
+      type: object
+      required: [activities]
+      properties:
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
     CompletionInput:
       type: object
       required: [activityId, durationMinutes]
       properties:
         activityId: { type: string }
-        durationMinutes: { type: number, minimum: 1, maximum: 180 }
+        durationMinutes: { type: number, minimum: 1, maximum: 240 }
     ManualEntryInput:
       type: object
       required: [title, durationMinutes, category]
@@ -401,10 +446,11 @@ components:
           type: array
           items:
             type: object
-            required: [title, count]
+            required: [title, count, minutes]
             properties:
               title: { type: string }
               count: { type: number }
+              minutes: { type: number }
         insight: { type: ["string", "null"] }
     BillingProduct:
       type: object

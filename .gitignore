@@ -47,3 +47,12 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# env / secrets — never commit real values (see .env.example)
+.env
+.env.*
+!.env.example
+
+# local dev logs
+*.log
+.vite-dev.log

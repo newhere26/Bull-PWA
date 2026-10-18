@@ -17,6 +17,10 @@ function serializeUser(user: Awaited<ReturnType<typeof ensureUser>>) {
     interests: user.interests ?? [],
     scrollWindow: user.scrollWindow,
     dailyScrollMinutes: user.dailyScrollMinutes,
+    avatarId: user.avatarId ?? "leaf",
+    dailyGoalMinutes: user.dailyGoalMinutes,
+    weeklyGoalMinutes: user.weeklyGoalMinutes,
+    yearlyGoalMinutes: user.yearlyGoalMinutes,
     access: getBillingStatus(user),
   };
 }

@@ -28,10 +28,14 @@ export const GetMeResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "firstName": zod.string().nullable(),
+  "avatarId": zod.string(),
   "onboardingComplete": zod.boolean(),
   "interests": zod.array(zod.string()),
   "scrollWindow": zod.string().nullable(),
   "dailyScrollMinutes": zod.number().nullable(),
+  "dailyGoalMinutes": zod.number().nullable(),
+  "weeklyGoalMinutes": zod.number().nullable(),
+  "yearlyGoalMinutes": zod.number().nullable(),
   "access": zod.object({
   "state": zod.enum(['trial', 'active', 'past_due', 'canceled', 'expired']),
   "trialDaysRemaining": zod.number().min(getMeResponseAccessTrialDaysRemainingMin),
@@ -50,11 +54,18 @@ export const updateMeBodyDailyScrollMinutesMin = 0;
 
 
 
+
+
+
 export const UpdateMeBody = zod.object({
   "firstName": zod.string().optional(),
   "interests": zod.array(zod.string()).optional(),
   "scrollWindow": zod.string().optional(),
   "dailyScrollMinutes": zod.number().min(updateMeBodyDailyScrollMinutesMin).optional(),
+  "dailyGoalMinutes": zod.number().min(1).nullish(),
+  "weeklyGoalMinutes": zod.number().min(1).nullish(),
+  "yearlyGoalMinutes": zod.number().min(1).nullish(),
+  "avatarId": zod.string().optional(),
   "onboardingComplete": zod.boolean().optional()
 })
 
@@ -66,10 +77,14 @@ export const UpdateMeResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "firstName": zod.string().nullable(),
+  "avatarId": zod.string(),
   "onboardingComplete": zod.boolean(),
   "interests": zod.array(zod.string()),
   "scrollWindow": zod.string().nullable(),
   "dailyScrollMinutes": zod.number().nullable(),
+  "dailyGoalMinutes": zod.number().nullable(),
+  "weeklyGoalMinutes": zod.number().nullable(),
+  "yearlyGoalMinutes": zod.number().nullable(),
   "access": zod.object({
   "state": zod.enum(['trial', 'active', 'past_due', 'canceled', 'expired']),
   "trialDaysRemaining": zod.number().min(updateMeResponseAccessTrialDaysRemainingMin),
@@ -99,17 +114,20 @@ export const GetSummaryResponse = zod.object({
 /**
  * @summary Get three activity recommendations
  */
-export const getRecommendationsQueryMinutesMin = 5;
-export const getRecommendationsQueryMinutesMax = 180;
+export const getRecommendationsQueryMinutesMax = 240;
 
 export const getRecommendationsQueryRefreshMin = 0;
+
+export const getRecommendationsQueryHourMin = 0;
+export const getRecommendationsQueryHourMax = 23;
 
 
 
 export const GetRecommendationsQueryParams = zod.object({
-  "minutes": zod.coerce.number().min(getRecommendationsQueryMinutesMin).max(getRecommendationsQueryMinutesMax),
+  "minutes": zod.coerce.number().min(1).max(getRecommendationsQueryMinutesMax).optional(),
   "mood": zod.coerce.string(),
-  "refresh": zod.coerce.number().min(getRecommendationsQueryRefreshMin).optional()
+  "refresh": zod.coerce.number().min(getRecommendationsQueryRefreshMin).optional(),
+  "hour": zod.coerce.number().min(getRecommendationsQueryHourMin).max(getRecommendationsQueryHourMax).optional().describe('Device-local hour (0-23) for time-of-day context matching')
 })
 
 export const getRecommendationsResponseActivitiesMin = 3;
@@ -122,7 +140,13 @@ export const GetRecommendationsResponse = zod.object({
   "id": zod.string(),
   "title": zod.string(),
   "description": zod.string(),
-  "durationMinutes": zod.number(),
+  "minMinutes": zod.number(),
+  "maxMinutes": zod.number(),
+  "requiresOther": zod.boolean(),
+  "requiresMaterials": zod.enum(['none', 'basic', 'specific']),
+  "conditions": zod.object({
+  "timeOfDay": zod.enum(['day', 'night']).optional()
+}).nullish(),
   "category": zod.string(),
   "moods": zod.array(zod.string()),
   "energy": zod.string(),
@@ -135,9 +159,35 @@ export const GetRecommendationsResponse = zod.object({
 
 
 /**
+ * @summary List all activity seeds for browsing
+ */
+export const ListActivitiesResponse = zod.object({
+  "activities": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "minMinutes": zod.number(),
+  "maxMinutes": zod.number(),
+  "requiresOther": zod.boolean(),
+  "requiresMaterials": zod.enum(['none', 'basic', 'specific']),
+  "conditions": zod.object({
+  "timeOfDay": zod.enum(['day', 'night']).optional()
+}).nullish(),
+  "category": zod.string(),
+  "moods": zod.array(zod.string()),
+  "energy": zod.string(),
+  "interests": zod.array(zod.string()),
+  "setting": zod.string(),
+  "equipment": zod.string(),
+  "instructions": zod.array(zod.string())
+}))
+})
+
+
+/**
  * @summary Record a completed activity
  */
-export const createCompletionBodyDurationMinutesMax = 180;
+export const createCompletionBodyDurationMinutesMax = 240;
 
 
 
@@ -210,7 +260,8 @@ export const GetWeeklySummaryResponse = zod.object({
 })),
   "topActivities": zod.array(zod.object({
   "title": zod.string(),
-  "count": zod.number()
+  "count": zod.number(),
+  "minutes": zod.number()
 })),
   "insight": zod.string().nullable()
 })

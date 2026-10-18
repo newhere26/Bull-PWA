@@ -9,4 +9,5 @@
 export type WeeklySummaryTopActivitiesItem = {
   title: string;
   count: number;
+  minutes: number;
 };
