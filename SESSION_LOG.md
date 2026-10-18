@@ -218,8 +218,9 @@
   degrades to the verified static design). Human-eyes confirmation pending.
 - KNOWN (later): JS bundle 753KB — code-split when convenient; framer-motion
   tree-shakes partially.
-- STOP. Next tracks when resumed: P1 Razorpay (needs 6 user env values),
-  D1 deploy, P2 PWA, P3 Android, P4 Electron. Dev servers left running.
+- STOP. Next tracks when resumed: P1 Razorpay (needs 7 user env values — key
+  pair + 4 plan IDs now, webhook secret at D1 deploy), D1 deploy, P2 PWA,
+  P3 Android, P4 Electron. Dev servers left running.
 
 ## 2026-09-05 — Post-F4 polish (user feedback: pickers look off, animations invisible)
 - ChooseTime redesigned: even-height cards (min-h, flex-col), clock icons,
@@ -251,25 +252,20 @@
   previously. Console clean throughout. Gates green.
 - Files: App.tsx, motion.tsx, index.css, lib/db/src/index.ts.
 
-## 2026-09-12 — 133 seeds + friction signals + partner badge (verified)
-- Catalog rewritten: type +3 fields; 100 seeds backfilled by judgment
-  (requiresOther≈22 true, specific≈6, timeOfDay on 3 seeds); 33 appended with
-  category-convention tags. Count verified 133.
-- No-alter proof: programmatic prefix check on all originals — 29 identical,
-  2 flagged lines byte-verified as correct Unicode (E2-80-99/E2-80-94); the
-  flags were console-display normalization, not file drift. Lesson: verify
-  Unicode at byte level, never via console output.
-- Spec: Activity +3 fields (conditions optional), hour param 0–23 + codegen.
-- Server: eq import, hour destructure, deviceTimeOfDay (day 06–18), everTitles
-  titles-only query, baseTitle normalizer (waiver only), 7-signal docstring.
-- Client sends hour with recommendations. Badge component (Users icon, shadcn
-  tooltip, aria-label) on rec + browse cards.
-- VERIFIED: worked-example math unchanged (tea 15, dance 7 — new signals 0);
-  waiver A/B via dated probe rows (deleted after): solo #7v#11, materials
-  #8v#27, context #12v#35; badge tooltip ONLY opens on trusted hover
-  (synthetic events can't open Radix tooltips — test-harness lesson, not a bug);
-  gates green; all temp scripts deleted.
-- Files: activityCatalog.ts, openapi.yaml, routes/reclaim.ts, App.tsx (+regen).
+## 2026-09-06 — Polish: top-activities minutes + animations 2–6 (verified)
+- Minutes: spec + codegen (`WeeklySummaryTopActivitiesItem` gains minutes);
+  server aggregates count+minutes; rows show "N min"; trophy untouched
+  ("2 repeat favorite" intact). Weekly snapshot proves both.
+- Confetti CUT per user (no install; Burst puff remains on done screen).
+- Glider: nav pill layoutId spring in AppShell. Slides: AnimatePresence
+  mode="wait" keyed motion.div around Switch. Crossfade: body color-transition
+  CSS (reduced-motion guarded, utilities win on specificity). Shimmer: keyframes
+  + Loading/rec-skeleton swap. Tilt: springs, touch/reduced-motion fallback.
+  Timer: sub-60s pulse + coral digits (conditional classes).
+- VERIFIED live: Tilt transform measured on hover
+  (perspective+rotateX/Y non-none); timer class confirmed pulsing-coral;
+  navigation clean, zero console errors throughout.
+- Files: openapi.yaml, routes/reclaim.ts, App.tsx, motion.tsx, index.css.
 
 ## 2026-09-09 — Avatars + history expander (verified)
 - Avatars: avatars.tsx (5 inline SVGs, AvatarArt + AvatarPicker with radio
@@ -299,17 +295,43 @@
 - NOTE: also fixed stale refresh-token fallout from days-old session (user
   re-signed-in; not an app bug).
 
-## 2026-09-06 — Polish: top-activities minutes + animations 2–6 (verified)
-- Minutes: spec + codegen (`WeeklySummaryTopActivitiesItem` gains minutes);
-  server aggregates count+minutes; rows show "N min"; trophy untouched
-  ("2 repeat favorite" intact). Weekly snapshot proves both.
-- Confetti CUT per user (no install; Burst puff remains on done screen).
-- Glider: nav pill layoutId spring in AppShell. Slides: AnimatePresence
-  mode="wait" keyed motion.div around Switch. Crossfade: body color-transition
-  CSS (reduced-motion guarded, utilities win on specificity). Shimmer: keyframes
-  + Loading/rec-skeleton swap. Tilt: springs, touch/reduced-motion fallback.
-  Timer: sub-60s pulse + coral digits (conditional classes).
-- VERIFIED live: Tilt transform measured on hover
-  (perspective+rotateX/Y non-none); timer class confirmed pulsing-coral;
-  navigation clean, zero console errors throughout.
-- Files: openapi.yaml, routes/reclaim.ts, App.tsx, motion.tsx, index.css.
+## 2026-09-12 — 133 seeds + friction signals + partner badge (verified)
+- Catalog rewritten: type +3 fields; 100 seeds backfilled by judgment
+  (requiresOther≈22 true, specific≈6, timeOfDay on 3 seeds); 33 appended with
+  category-convention tags. Count verified 133.
+- No-alter proof: programmatic prefix check on all originals — 29 identical,
+  2 flagged lines byte-verified as correct Unicode (E2-80-99/E2-80-94); the
+  flags were console-display normalization, not file drift. Lesson: verify
+  Unicode at byte level, never via console output.
+- Spec: Activity +3 fields (conditions optional), hour param 0–23 + codegen.
+- Server: eq import, hour destructure, deviceTimeOfDay (day 06–18), everTitles
+  titles-only query, baseTitle normalizer (waiver only), 7-signal docstring.
+- Client sends hour with recommendations. Badge component (Users icon, shadcn
+  tooltip, aria-label) on rec + browse cards.
+- VERIFIED: worked-example math unchanged (tea 15, dance 7 — new signals 0);
+  waiver A/B via dated probe rows (deleted after): solo #7v#11, materials
+  #8v#27, context #12v#35; badge tooltip ONLY opens on trusted hover
+  (synthetic events can't open Radix tooltips — test-harness lesson, not a bug);
+  gates green; all temp scripts deleted.
+- Files: activityCatalog.ts, openapi.yaml, routes/reclaim.ts, App.tsx (+regen).
+
+## 2026-10-18 — GitHub backup + Razorpay env docs (verified)
+- Discovered: the entire migration (F1–F4 + polish + 3d) was uncommitted and
+  never pushed; local main had no upstream. origin (GitHub newhere26/Bull-PWA)
+  held one unrelated commit 8b3a4d1 containing only Reclaim-PWA.zip — a Replit
+  export dump, not source.
+- Backed up non-destructively: single commit 9eff43e (45 files, +2512/−780) on a
+  NEW branch standalone; origin/main (the zip) left untouched at 8b3a4d1.
+  Verified via ls-remote. Secrets never uploaded (.env ignored; only
+  .env.example placeholders staged — confirmed by reading both files).
+- Doc fix: .env.example billing block rewritten Stripe → Razorpay (key pair,
+  webhook secret, 4 plan IDs) → commit b176ecb. Frontend .env.example unchanged.
+- Housekeeping: reordered this log (the 09-12 entry sat before the 09-09 ones);
+  corrected "6 user env values" → 7 in the F4 STOP note.
+- Lessons: no `gh` CLI on this box — GitHub inspected via webfetch + git
+  ls-remote. PowerShell prints git progress on stderr, so `if ($?)` can read
+  false even when the command succeeded (push/commit) — judge by the output
+  line, not the exit code.
+- NEXT: P1 Razorpay (blocked on user's 6 dashboard values) or P2 PWA (unblocked;
+  needs plan re-order approval). Re-verify typecheck gate before starting either.
+- Files: .env.example, SESSION_LOG.md.

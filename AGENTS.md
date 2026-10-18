@@ -130,6 +130,11 @@ OneDrive — node_modules/.git/dist cause sync locks). Windows 11, PowerShell 5.
 - One-off node scripts can crash on exit (libuv assert, Windows) AFTER succeeding
   — check output, ignore the crash.
 - Root `.env` (server) + `artifacts/reclaim/.env` (VITE_) — both git-ignored.
+- Git: real source lives on branch `standalone` at GitHub `origin`
+  (`newhere26/Bull-PWA`, public). `origin/main` still holds only an old
+  `Reclaim-PWA.zip` dump (8b3a4d1) — push work to `standalone`, never
+  force-push `main`. `gitsafe-backup` remote is dead (DNS). No `gh` CLI here;
+  `git ls-remote` + webfetch are the way to inspect GitHub.
 
 ## 6. Handover protocol (mandatory at session end / before compaction)
 1. Record plan changes in THIS file (§2–§4) FIRST, then build.
